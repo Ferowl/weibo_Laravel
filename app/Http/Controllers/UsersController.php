@@ -11,11 +11,17 @@ class UsersController extends Controller
     public function __construct()
     {
         $this->middleware('auth', [
-            'except' => ['create', 'store']
+            'except' => ['create', 'store', 'index']
         ]);
         $this->middleware('guest', [
             'only' => ['create'],
         ]);
+    }
+
+    public function index()
+    {
+        $users = User::paginate(10);
+        return view('users.index', compact('users'));
     }
 
     public function create()
@@ -25,7 +31,8 @@ class UsersController extends Controller
 
     public function show(User $user)
     {
-        return view('users.show', compact('user'));
+        // $statuses = $user->statuses()->orderBy('create_at', 'desc')->paginate(10);
+        return view('users.show', compact('user', 'statuses'));
     }
 
     public function store(Request $request)
@@ -69,5 +76,13 @@ class UsersController extends Controller
         session()->flash('success', '个人资料更新');
 
         return redirect()->route('users.show', $user->id);
+    }
+
+    public function destroy(User $user)
+    {
+        $this->authorize('destroy', $user);
+        $user->delete();
+        session()->flash('success', '成功删除用户！');
+        return back();
     }
 }
